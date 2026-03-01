@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "tax_core",
+    "flutter_integration",
+]
+resolver = "2"

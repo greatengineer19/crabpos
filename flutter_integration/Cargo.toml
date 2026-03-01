@@ -1,0 +1,12 @@
+[package]
+name = "flutter_integration"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "flutter_tax"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+tax_core = { path = "../tax_core" }
+flutter_rust_bridge = "2"

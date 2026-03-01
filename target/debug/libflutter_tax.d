@@ -1,0 +1,1 @@
+/Users/runchise-andrew/Documents/SelfProjects/sales_calculation_of_ruby_flutter_on_rust_wasm/target/debug/libflutter_tax.a: /Users/runchise-andrew/Documents/SelfProjects/sales_calculation_of_ruby_flutter_on_rust_wasm/flutter_integration/src/lib.rs /Users/runchise-andrew/Documents/SelfProjects/sales_calculation_of_ruby_flutter_on_rust_wasm/tax_core/src/lib.rs
