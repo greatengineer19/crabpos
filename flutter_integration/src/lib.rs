@@ -82,7 +82,7 @@ pub fn calculate_tax(
     let price_dec = Decimal::parse(&price)
         .ok_or_else(|| "price is not a valid decimal string".to_string())?;
 
-    let custom = if custom_rate.is_empty() || custom_rate = "0.000000" {
+    let custom = if custom_rate.is_empty() || custom_rate == "0.000000" {
         None
     } else {
         Some(Decimal::parse(&custom_rate)

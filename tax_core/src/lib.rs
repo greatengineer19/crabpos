@@ -170,7 +170,7 @@ impl TaxRegion {
 pub enum ProductCategory { General, Food, Medicine, Digital, Luxury }
 
 impl ProductCategory {
-    pub fun from_str(s: &str) -> Option<Self> {
+    pub fn from_str(s: &str) -> Option<Self> {
         match s.to_ascii_uppercase().as_str() {
             "GENERAL" => Some(Self::General),
             "FOOD" => Some(Self::Food),
@@ -319,7 +319,7 @@ pub fn calculate(input: &TaxInput) -> Result<TaxResult, TaxError> {
 
 #[repr(C)]
 pub struct CTaxResult {
-    pub status;
+    pub status: u8,
     pub price_before_tax: [u8; 32],
     pub rate: [u8; 32],
     pub rate_percent: [u8; 32],
