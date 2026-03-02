@@ -9,4 +9,16 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 tax_core = { path = "../tax_core" }
-flutter_rust_bridge = "2"
+
+# FRB v2 - pin to a stable 2.x release
+flutter_rust_bridge = "=2.7.0"
+
+[build-dependencies]
+# Required by FRB v2 for the build.rs hook
+flutter_rust_bridge_codegen = "=2.7.0"
+
+# Suppress the `unexpected_cfgs` lint for the `frb_expand` condition that
+# flutter_rust_bridge_macros emits internally when expanding #[frb(sync)] etc.
+# See: https://doc.rust-lang.org/cargo/reference/manifest.html#the-lints-section
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
