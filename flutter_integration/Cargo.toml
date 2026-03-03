@@ -11,11 +11,11 @@ crate-type = ["cdylib", "staticlib"]
 tax_core = { path = "../tax_core" }
 
 # FRB v2 - pin to a stable 2.x release
-flutter_rust_bridge = "=2.7.0"
+flutter_rust_bridge = "=2.11.1"
 
 [build-dependencies]
 # Required by FRB v2 for the build.rs hook
-flutter_rust_bridge_codegen = "=2.7.0"
+flutter_rust_bridge_codegen = "=2.9.0"
 
 # Suppress the `unexpected_cfgs` lint for the `frb_expand` condition that
 # flutter_rust_bridge_macros emits internally when expanding #[frb(sync)] etc.

@@ -10,7 +10,15 @@
 //!     4. The `flutter_rust_bridge_codegen generate` command reads src/api/**/*.rs
 //!        and produces lib/src/rust in the Flutter project.
 
-// Re-export the generated init hook (required by FRB v2 runtime).
-pub use flutter_rust_bridge::for_generated::byteorder;
+// 1. Include the code that FRB codegen generated (lives at src/frb_generated.rs)
+mod frb_generated;
 
-mod api; // codegen scans this module
+// 2. Expose your API modules publicly
+pub mod api;
+
+// 3. Required init function - FRB v2 runtime calls this on startup
+#[flutter_rust_bridge::frb(init)]
+pub fn init_app() {
+    // Default setup; add custom logging/panic hooks here if needed;
+    flutter_rust_bridge::setup_default_user_code_handler();
+}
