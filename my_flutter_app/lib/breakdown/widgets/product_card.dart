@@ -1,7 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/product.dart';
-import '../models/cart_model.dart';
+import '../../models/product.dart';
+import '../../models/cart_model.dart';
 
 class ProductCard extends StatelessWidget {
     final Product product;
@@ -9,7 +10,7 @@ class ProductCard extends StatelessWidget {
     const ProductCard({ super.key, required this.product });
 
     @override
-    Widget build(Build context) {
+    Widget build(BuildContext context) {
         final cart = context.watch<CartModel>();
         final qty = cart.getQty(product.id);
         final isSelected = qty > 0;
@@ -46,12 +47,12 @@ class ProductCard extends StatelessWidget {
                                         height: 1.3,
                                     ),
                                     maxLines: 2,
-                                    overflow: TexOverflow.ellipsis,
+                                    overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                     '${product.unit} · ${product.taxLabel}',
-                                    style: const TaxStyle(
+                                    style: const TextStyle(
                                         color: Color(0xFF6B7280),
                                         fontSize: 11,
                                     ),
@@ -83,16 +84,16 @@ class ProductCard extends StatelessWidget {
                                         topRight: Radius.circular(14),
                                         bottomLeft: Radius.circular(10),
                                     )
-                                )
-                            ),
-                            child: Text(
-                                'x$qty',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
+                                ),
+                                child: Text(
+                                    'x$qty',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
                                 )
                             )
+                            ),
                         )
                 ]
             )
@@ -125,7 +126,7 @@ class _QtyControl extends StatelessWidget {
                 _CircleBtn(
                     icon: Icons.remove,
                     enabled: qty > 0,
-                    onTap: () => cart.remote(product),
+                    onTap: () => cart.remove(product),
                 ),
                 const SizedBox(width: 8),
                 SizedBox(

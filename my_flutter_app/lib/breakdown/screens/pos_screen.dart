@@ -1,7 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/cart_model.dart';
-import '../models/mock_products.dart';
+import '../../models/cart_model.dart';
+import '../../models/mock_products.dart';
 import '../widgets/product_card.dart';
 import 'summary_screen.dart';
 
@@ -38,7 +39,7 @@ class _PosScreenState extends State<PosScreen> {
                         Expanded(
                             child: GridView.builder(
                                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                                gridDelegate: const SilverGridDelegateWithFixedCrossAxisCount(
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
                                     crossAxisSpacing: 12,
                                     mainAxisSpacing: 12,
@@ -52,7 +53,7 @@ class _PosScreenState extends State<PosScreen> {
                     ],
                 )
             )
-        )
+        );
     }
 
     Widget _buildHeader(CartModel cart) {
@@ -133,7 +134,7 @@ class _PosScreenState extends State<PosScreen> {
                                 )
                             )
                         )
-                    )
+                    );
                 }
             )
         );

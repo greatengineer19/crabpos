@@ -40,7 +40,7 @@ class Product {
             return TaxResult(
                 base: base,
                 tax: tax,
-                total: lineTotal + tax
+                total: lineTotal
             );
         }
 

@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/cart_model.dart';
+import '../../models/cart_model.dart';
+import '../../models/product.dart';
 
 class SummaryScreen extends StatelessWidget {
     const SummaryScreen({ super.key });
@@ -70,7 +72,7 @@ class SummaryScreen extends StatelessWidget {
                             Text(
                                 'Order Summary',
                                 style: TextStyle(
-                                    Color(0xFFE8EAF6),
+                                    color: Color(0xFFE8EAF6),
                                     fontSize: 22,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: -0.5
@@ -141,7 +143,7 @@ class SummaryScreen extends StatelessWidget {
                                                     const SizedBox(width: 6),
                                                     Container(
                                                         padding: const EdgeInsets.symmetric(
-                                                            horizontal: 6, vertical 1
+                                                            horizontal: 6, vertical: 1
                                                         ),
                                                         decoration: BoxDecoration(
                                                             color: const Color(0xFF1E2535),
@@ -295,7 +297,7 @@ class SummaryScreen extends StatelessWidget {
                     ),
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        chilren: [
+                        children: [
                             const Text(
                                 'Grand Total',
                                 style: TextStyle(
@@ -326,46 +328,48 @@ class SummaryScreen extends StatelessWidget {
             decoration: const BoxDecoration(
                 color: Color(0xFF0A0D14),
                 border: Border(
-                    top: BorderSide(color: Color(0xFF1E2535))
+                    top: BorderSide(color: Color(0xFF1E2535)),
                 ),
-                child: GestureDetector(
-                    onTap: () {
-                        cart.clear();
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('✅ Payment confirmed!'),
-                                backgroundColor: Color(0xFF10B981),
-                            )
-                        );
-                    },
-                    child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                                colors: [Color(0xFF10B981), color(0xFF059669)],
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                    BoxShadow(
-                                        color: const Color(0xFF10B981).withOpacity(0.35),
-                                        blurRadius: 24,
-                                        offset: const Offset(0, 4),
-                                    ),
-                                ],
+            ),
+            child: GestureDetector(
+                onTap: () {
+                    cart.clear();
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('✅ Payment confirmed!'),
+                            backgroundColor: Color(0xFF10B981),
+                        ),
+                    );
+                },
+                child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                            BoxShadow(
+                                color: const Color(0xFF10B981).withOpacity(0.35),
+                                blurRadius: 24,
+                                offset: const Offset(0, 4),
                             ),
-                            alignment: Alignment.center,
-                            child: Text(
-                                '✓  Confirm Payment · ${_fmt(cart.grandTotal)}',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                )
-                            )
-                        )
-                    )
-                )
-            )
+                        ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                        '✓  Confirm Payment · ${_fmt(cart.grandTotal)}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                        ),
+                    ),
+                ),
+            ),
         );
     }
 
@@ -379,7 +383,6 @@ class SummaryScreen extends StatelessWidget {
 }
 
 // --- Reusable card components --------------------
-
 class _Card extends StatelessWidget {
     final List<Widget> children;
     const _Card({ required this.children });
@@ -400,7 +403,7 @@ class _Card extends StatelessWidget {
 class _CardRow extends StatelessWidget {
     final Widget child;
     final bool isLast;
-    const _CardRow({required this.child, this.islast = false});
+    const _CardRow({ required this.child, this.isLast = false });
 
     @override
     Widget build(BuildContext context) {
