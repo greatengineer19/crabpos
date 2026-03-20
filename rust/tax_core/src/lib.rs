@@ -232,7 +232,10 @@ pub struct TaxInput {
     pub price: Decimal,
     pub region: TaxRegion,
     pub category: ProductCategory,
-    pub custom_rate: Option<Decimal>
+    pub custom_rate: Option<Decimal>,
+    /// true  = price already includes tax  (tax-inclusive).
+    /// false = price is pre-tax            (tax-exclusive, default).
+    pub inclusive: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -277,7 +280,7 @@ impl TaxError {
 pub fn calculate(input: &TaxInput) -> Result<TaxResult, TaxError> {
     if input.price.is_negative() { return Err(TaxError::NegativePrice); }
     if !input.price.fits_decimal20_6() { return Err(TaxError::PriceExceedsDecimal20_6) }
-    
+
     let rate = match input.region {
         TaxRegion::Custom => {
             let r = input.custom_rate.ok_or(TaxError::CustomRateMissingForCustomRegion)?;
@@ -294,16 +297,36 @@ pub fn calculate(input: &TaxInput) -> Result<TaxResult, TaxError> {
         }
     };
 
-    let tax_amount = input.price.mul(rate);
-    let price_after_tax = input.price + tax_amount;
+    // Tax-inclusive: price already contains tax.
+    //   base  = price / (1 + rate)
+    //   tax   = price - base
+    //   total = price   (unchanged)
+    //
+    // Tax-exclusive: price is pre-tax.
+    //   tax   = price * rate
+    //   total = price + tax
+    let (price_before_tax, tax_amount, price_after_tax) = if input.inclusive && !rate.is_zero() {
+        // denominator = 1 + rate  (both are scaled by SCALE, so add raw values)
+        let denom = Decimal(Decimal::ONE.raw() + rate.raw());
+        // base = price * ONE / denom  — use mul then scale correction
+        // price / denom: multiply by SCALE then divide by denom.raw()
+        let base_raw = (input.price.raw() * SCALE) / denom.raw();
+        let base = Decimal(base_raw);
+        let tax  = input.price - base;
+        (base, tax, input.price)
+    } else {
+        let tax   = input.price.mul(rate);
+        let total = input.price + tax;
+        (input.price, tax, total)
+    };
 
     Ok(TaxResult {
-        price_before_tax: input.price,
+        price_before_tax,
         rate,
         tax_amount,
         price_after_tax,
         region: input.region,
-        category: input.category
+        category: input.category,
     })
 }
 
@@ -361,10 +384,13 @@ fn write_decimal_to(buf: &mut [u8; 32], d: Decimal) {
 
 #[no_mangle]
 pub unsafe extern "C" fn tax_calculate(
-    price:  *const core::ffi::c_char,
-    region_code:    *const core::ffi::c_char,
-    category_code:  *const core::ffi::c_char,
-    custom_rate: *const core::ffi::c_char,
+    price:         *const core::ffi::c_char,
+    region_code:   *const core::ffi::c_char,
+    category_code: *const core::ffi::c_char,
+    custom_rate:   *const core::ffi::c_char,
+    // 0 = tax-exclusive (price is pre-tax).
+    // 1 = tax-inclusive (price already includes tax).
+    inclusive:     u8,
 ) -> CTaxResult {
     let price_str = unsafe { cstr_to_str(price) };
     let price_val = match Decimal::parse(price_str) {
@@ -392,7 +418,7 @@ pub unsafe extern "C" fn tax_calculate(
         }
     };
 
-    let input = TaxInput { price: price_val, region, category, custom_rate: custom };
+    let input = TaxInput { price: price_val, region, category, custom_rate: custom, inclusive: inclusive != 0 };
 
     match calculate(&input) {
         Ok(r) => {
@@ -459,7 +485,7 @@ mod tests {
     fn d(s: &str) -> Decimal { Decimal::parse(s).unwrap() }
 
     fn input(price: &str, region: TaxRegion, cat: ProductCategory) -> TaxInput {
-        TaxInput { price: d(price), region, category: cat, custom_rate: None }
+        TaxInput { price: d(price), region, category: cat, custom_rate: None, inclusive: false }
     }
 
     // Decimal type
@@ -489,6 +515,20 @@ mod tests {
         assert_eq!(r.price_after_tax.to_string_fixed().as_str(), "108.000000");
     }
 
+    #[test] fn us_general_inclusive() {
+        // 108.000000 inclusive at 8% → base = 100.000000, tax = 8.000000
+        let r = calculate(&TaxInput {
+            price: d("108.000000"),
+            region: TaxRegion::Us,
+            category: ProductCategory::General,
+            custom_rate: None,
+            inclusive: true,
+        }).unwrap();
+        assert_eq!(r.price_before_tax.to_string_fixed().as_str(), "100.000000");
+        assert_eq!(r.tax_amount.to_string_fixed().as_str(), "8.000000");
+        assert_eq!(r.price_after_tax.to_string_fixed().as_str(), "108.000000");
+    }
+
     #[test] fn custom_rate_over_100_error() {
         assert_eq!(
             calculate(&TaxInput {
@@ -496,6 +536,7 @@ mod tests {
                 region: TaxRegion::Custom,
                 category: ProductCategory::General,
                 custom_rate: Some(d("1.000001")),
+                inclusive: false,
             }),
             Err(TaxError::InvalidCustomRate)
         );

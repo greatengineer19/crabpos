@@ -5,6 +5,6 @@ edition = "2021"
 
 [lib]
 name = "tax_core"
-crate-type = ["rlib", "cdylib", "staticlib"]
+crate-type = ["rlib", "staticlib"]
 
 [dependencies]

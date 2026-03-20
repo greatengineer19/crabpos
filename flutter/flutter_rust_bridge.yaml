@@ -1,0 +1,5 @@
+# flutter_rust_bridge_codegen v2 configuration
+# Run codegen: flutter_rust_bridge_codegen generate
+rust_input: "crate::api"
+rust_root: "../rust/flutter_integration"
+dart_output: "lib/src/rust"

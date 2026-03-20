@@ -66,9 +66,10 @@ module TaxCore
 		end
 	end
 
-	# tax_calculate(price, region_code, category_code, custom_rate) -> CTaxResult
+	# tax_calculate(price, region_code, category_code, custom_rate, inclusive) -> CTaxResult
+	# inclusive: 0 = tax-exclusive, 1 = tax-inclusive
 	attach_function :tax_calculate,
-									[:string, :string, :string, :string],
+									[:string, :string, :string, :string, :uint8],
 									CTaxResult.by_value
 
 	# tax_effective_rate(region_code, category_code, out_buf, out_len) -> int32
@@ -122,40 +123,38 @@ class TaxCalculator
 	VALID_REGIONS = %w[US EU UK AU CUSTOM].freeze
 	VALID_CATEGORIES = %w[GENERAL FOOD MEDICINE DIGITAL LUXURY].freeze
 
-	# Calcualte tax for a product.
+	# Calculate tax for a product.
 	#
-	# @param price	[String, BigDecimal, Numeric]
-	#								Pre-tax price in DECIMAL(20,6) format.
-	#								Pass a String for exact representation: "99.9900000"
-	#								BigDecimal and Numeric are also accepted and converted.
-	#
-	# @param region		[String]	"US" | "EU" | "UK" | "AU" | "CUSTOM"
-	# @param category	[String]	"GENERAL" | "FOOD" | "MEDICINE" | "DIGITAL" | "LUXURY"
-	# @param custom_rate [String, BigDecimal, nil]
-	#											Override tax rate as a fraction, e.g. "0.075000" = 7.5%.
-	#											Pass nil or omit to use the region/category default.
+	# @param price		[String, BigDecimal, Numeric]  Pre-tax (or inclusive) price.
+	# @param region		[String]  "US" | "EU" | "UK" | "AU" | "CUSTOM"
+	# @param category	[String]  "GENERAL" | "FOOD" | "MEDICINE" | "DIGITAL" | "LUXURY"
+	# @param custom_rate [String, BigDecimal, nil]  Override fraction, e.g. "0.075000" = 7.5%.
+	# @param inclusive  [Boolean]
+	#									false (default) — price is pre-tax  (tax-exclusive)
+	#									true            — price already includes tax (tax-inclusive)
 	#
 	# @return [TaxResult]
 	# @raise [TaxCalculatorError, ArgumentError]
 
-	def calculate(price:, region: "US", category: "GENERAL", custom_rate: nil)
-		region_s = region.to_s.upcase
+	def calculate(price:, region: "US", category: "GENERAL", custom_rate: nil, inclusive: false)
+		region_s   = region.to_s.upcase
 		category_s = category.to_s.upcase
-		price_s = decimal_string(price)
-		custom_s = custom_rate ? decimal_string(custom_rate) : ""
+		price_s    = decimal_string(price)
+		custom_s   = custom_rate ? decimal_string(custom_rate) : ""
+		inclusive_u = inclusive ? 1 : 0
 
 		validate!(region_s, category_s)
 
-		raw = TaxCore.tax_calculate(price_s, region_s, category_s, custom_s)
+		raw = TaxCore.tax_calculate(price_s, region_s, category_s, custom_s, inclusive_u)
 
 		raise TaxCalculatorError.new(raw[:status]) unless raw[:status] == 0
 
 		TaxResult.new(
 			price_before_tax: BigDecimal(raw.decimal_field(:price_before_tax)),
-			rate: BigDecimal(raw.decimal_field(:rate)),
-			rate_percent: BigDecimal(raw.decimal_field(:rate_percent)),
-			tax_amount: BigDecimal(raw.decimal_field(:tax_amount)),
-			price_after_tax: BigDecimal(raw.decimal_field(:price_after_tax))
+			rate:             BigDecimal(raw.decimal_field(:rate)),
+			rate_percent:     BigDecimal(raw.decimal_field(:rate_percent)),
+			tax_amount:       BigDecimal(raw.decimal_field(:tax_amount)),
+			price_after_tax:  BigDecimal(raw.decimal_field(:price_after_tax))
 		)
 	end
 

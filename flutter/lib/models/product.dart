@@ -1,3 +1,15 @@
+// lib/models/product.dart
+//
+// Tax calculation is NOT performed here. The single source of truth is the
+// Rust `tax_core` crate, called through `TaxCalculator.calculateForProduct()`.
+//
+// TaxResult is kept here as a plain value object because cart_model.dart and
+// summary_screen.dart depend on its {base, tax, total} shape.
+
+import '../src/tax_calculator.dart' show TaxCalculator, TaxResult;
+
+export '../src/tax_calculator.dart' show TaxResult;
+
 enum TaxSetting { noTax, taxInclusive, taxExclusive }
 
 class Product {
@@ -7,7 +19,7 @@ class Product {
     final double price;
     final String unit;
     final TaxSetting taxSetting;
-    final double taxRate; // 0, 10, or 11
+    final double taxRate; // percentage: 0, 10, or 11
     final String? taxId;
     final String emoji;
 
@@ -23,34 +35,14 @@ class Product {
         required this.emoji,
     });
 
-    TaxResult calculateTax(int qty) {
-        final lineTotal = price * qty;
-
-        if (taxSetting == TaxSetting.noTax || taxRate == 0) {
-            return TaxResult(
-                base: lineTotal,
-                tax: 0,
-                total: lineTotal
-            );
-        }
-
-        if (taxSetting == TaxSetting.taxInclusive) {
-            final base = lineTotal / (1 + taxRate / 100);
-            final tax = lineTotal - base;
-            return TaxResult(
-                base: base,
-                tax: tax,
-                total: lineTotal
-            );
-        }
-
-        final tax = lineTotal * (taxRate / 100);
-        return TaxResult(
-            base: lineTotal,
-            tax: tax,
-            total: lineTotal + tax
-        );
-    }
+    /// Delegates to Rust via [TaxCalculator]. No tax arithmetic in Dart.
+    TaxResult calculateTax(int qty) => TaxCalculator.calculateForProduct(
+        price:          price,
+        qty:            qty,
+        taxRatePercent: taxRate,
+        noTax:          taxSetting == TaxSetting.noTax,
+        inclusive:      taxSetting == TaxSetting.taxInclusive,
+    );
 
     String get taxLabel {
         switch (taxSetting) {
@@ -62,16 +54,4 @@ class Product {
                 return 'Excl. Tax ${taxRate.toInt()}%';
         }
     }
-}
-
-class TaxResult {
-    final double base;
-    final double tax;
-    final double total;
-
-    const TaxResult({
-        required this.base,
-        required this.tax,
-        required this.total,
-    });
 }

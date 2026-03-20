@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "flutter_tax"
-crate-type = ["cdylib", "staticlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 tax_core = { path = "../tax_core" }

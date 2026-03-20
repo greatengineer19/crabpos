@@ -79,11 +79,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<TaxBreakdown> crateApiTaxCalculateTax(
+  TaxBreakdown crateApiTaxCalculateTax(
       {required String price,
       required Region region,
       required Category category,
-      required String customRate});
+      required String customRate,
+      required bool inclusive});
 
   String crateApiTaxGetEffectiveRate(
       {required Region region, required Category category});
@@ -98,34 +99,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<TaxBreakdown> crateApiTaxCalculateTax(
+  TaxBreakdown crateApiTaxCalculateTax(
       {required String price,
       required Region region,
       required Category category,
-      required String customRate}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+      required String customRate,
+      required bool inclusive}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(price, serializer);
         sse_encode_region(region, serializer);
         sse_encode_category(category, serializer);
         sse_encode_String(customRate, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 1, port: port_);
+        sse_encode_bool(inclusive, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_tax_breakdown,
         decodeErrorData: sse_decode_String,
       ),
       constMeta: kCrateApiTaxCalculateTaxConstMeta,
-      argValues: [price, region, category, customRate],
+      argValues: [price, region, category, customRate, inclusive],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta get kCrateApiTaxCalculateTaxConstMeta => const TaskConstMeta(
         debugName: "calculate_tax",
-        argNames: ["price", "region", "category", "customRate"],
+        argNames: ["price", "region", "category", "customRate", "inclusive"],
       );
 
   @override
@@ -158,6 +160,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
   }
 
   @protected
@@ -222,6 +230,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
   Category sse_decode_category(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
@@ -282,15 +296,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
-  }
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
   }
 
   @protected
@@ -341,11 +355,5 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
   }
 }

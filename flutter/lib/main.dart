@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'models/cart_model.dart';
 import 'breakdown/screens/pos_screen.dart';
+import 'src/rust/frb_generated.dart';
+import 'src/tax_calculator.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initTaxLibrary(); // ← calls RustLib.init() under the hood
   runApp(const MyApp());
 }
 

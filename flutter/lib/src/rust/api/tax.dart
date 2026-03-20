@@ -24,16 +24,27 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// );
 ///
 /// ```
-Future<TaxBreakdown> calculateTax(
+/// Calculate tax.
+///
+/// Pure computation — no I/O — so this is exposed as a *synchronous* Dart
+/// call via `#[frb(sync)]`. The caller does NOT need `await`.
+///
+/// `price`       – DECIMAL(20,6) string, e.g. "99.990000"
+/// `custom_rate` – optional override fraction, e.g. "0.075000"; pass "" for default
+/// `inclusive`   – true  = price already includes tax (tax-inclusive)
+///                 false = price is pre-tax           (tax-exclusive)
+TaxBreakdown calculateTax(
         {required String price,
         required Region region,
         required Category category,
-        required String customRate}) =>
+        required String customRate,
+        required bool inclusive}) =>
     RustLib.instance.api.crateApiTaxCalculateTax(
         price: price,
         region: region,
         category: category,
-        customRate: customRate);
+        customRate: customRate,
+        inclusive: inclusive);
 
 /// Get the effective rate for a region+category as a DECIMAL(20,6) string.
 /// e.g. "0.200000" for EU/Digital.
